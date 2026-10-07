@@ -1,0 +1,92 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-dark: #12100E;
+    --bg-darker: #0A0908;
+    --bg-surface: #1A1715;
+    --color-cream: #FBF8F3;
+    --color-terracotta: #C85A32;
+    --color-gold: #C5A059;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--color-cream);
+    overflow-x: hidden;
+    letter-spacing: -0.01em;
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0A0908;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2C2622;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #C85A32;
+  }
+}
+
+@layer utilities {
+  .font-serif-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  
+  .font-italic-accent {
+    font-family: 'Instrument Serif', 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Editorial gradient text */
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #FBF8F3 0%, #E8DFD3 50%, #C5A059 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .text-gradient-terracotta {
+    background: linear-gradient(135deg, #FBF8F3 0%, #E8DFD3 40%, #C85A32 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Luxury glass blur for sticky header & overlays without neon */
+  .glass-dark {
+    background: rgba(18, 16, 14, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(214, 206, 190, 0.08);
+  }
+
+  .glass-card {
+    background: rgba(26, 23, 21, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(214, 206, 190, 0.1);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
