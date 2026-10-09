@@ -182,14 +182,14 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onNavigate, initialRes
 
     if (!customerName.trim() || customerName.trim().length < 2) {
       setSubmissionError('Please enter your full name.');
-      setStep(5);
+      setStep(3);
       return;
     }
 
     const cleanPhone = phone.replace(/\D/g, '');
     if (cleanPhone.length < 10) {
       setSubmissionError('Please enter a valid 10-digit mobile number.');
-      setStep(5);
+      setStep(3);
       return;
     }
 
@@ -348,20 +348,17 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onNavigate, initialRes
         </div>
 
         {/* ========================================================================= */}
-        {/* TAB 1: 6-STEP BOOKING FLOW */}
+        {/* TAB 1: 3-STEP STREAMLINED BOOKING FLOW */}
         {/* ========================================================================= */}
         {activeTab === 'booking' && !confirmedBooking && (
           <div className="space-y-8">
             {/* Step Progress Bar */}
-            <div className="bg-brand-surface/60 border border-brand-border/60 rounded-2xl p-4 max-w-4xl mx-auto shadow-xl">
-              <div className="grid grid-cols-6 gap-1 sm:gap-3 text-center">
+            <div className="bg-brand-surface/60 border border-brand-border/60 rounded-2xl p-4 max-w-xl mx-auto shadow-xl">
+              <div className="grid grid-cols-3 gap-2 sm:gap-6 text-center">
                 {[
                   { num: 1, label: 'Station' },
-                  { num: 2, label: 'Date' },
-                  { num: 3, label: 'Duration' },
-                  { num: 4, label: 'Time' },
-                  { num: 5, label: 'Details' },
-                  { num: 6, label: 'Confirm' },
+                  { num: 2, label: 'Schedule' },
+                  { num: 3, label: 'Confirm' },
                 ].map((s) => (
                   <button
                     key={s.num}
@@ -378,7 +375,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onNavigate, initialRes
                     }`}
                   >
                     <div
-                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-all ${
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-all ${
                         step === s.num
                           ? 'bg-brand-terracotta text-brand-cream ring-2 ring-brand-terracotta/40 scale-105'
                           : step > s.num
@@ -388,7 +385,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onNavigate, initialRes
                     >
                       {step > s.num ? <Check className="w-3.5 h-3.5" /> : s.num}
                     </div>
-                    <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider hidden xs:inline">
+                    <span className="text-[11px] sm:text-xs font-mono uppercase tracking-wider">
                       {s.label}
                     </span>
                   </button>
@@ -403,7 +400,7 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onNavigate, initialRes
                 <div className="space-y-6 animate-fade-in">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-brand-border/60">
                     <div>
-                      <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">Step 1 of 6</span>
+                      <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">Step 1 of 3</span>
                       <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-cream">
                         Choose Gaming Equipment
                       </h2>
@@ -525,34 +522,41 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onNavigate, initialRes
                       disabled={!selectedResource || selectedResource.isMaintenance}
                       className="px-8 py-3.5 rounded-full bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream font-semibold text-xs uppercase tracking-widest transition-all shadow-luxury-ember flex items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <span>Proceed to Date</span>
+                      <span>Proceed to Schedule</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 2: CHOOSE DATE */}
+              {/* STEP 2: CHOOSE SCHEDULE (DATE, DURATION & TIME SLOT ON SAME STEP) */}
               {step === 2 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="flex items-center justify-between pb-4 border-b border-brand-border/60">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-brand-border/60">
                     <div>
-                      <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">Step 2 of 6</span>
+                      <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">Step 2 of 3</span>
                       <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-cream">
-                        Choose Booking Date
+                        Choose Date, Duration & Time
                       </h2>
                     </div>
-                    <span className="text-xs font-mono text-brand-subtle hidden sm:inline">
-                      Station: <strong className="text-brand-cream">{selectedResource?.name}</strong>
+                    <span className="text-xs font-mono text-brand-subtle">
+                      Station: <strong className="text-brand-terracotta">{selectedResource?.name}</strong>
                     </span>
                   </div>
 
-                  {/* Quick Preset Buttons */}
-                  <div className="space-y-3">
-                    <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle block">
-                      Quick Selection (Asia/Kolkata IST)
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
+                  {/* 1. Date Selection */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle flex items-center gap-1.5 font-semibold">
+                        <Calendar className="w-3.5 h-3.5 text-brand-gold" />
+                        <span>1. Select Date</span>
+                      </label>
+                      <span className="text-xs font-serif text-brand-cream font-bold">
+                        {getReadableDate(selectedDate)}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
                       {[
                         { label: 'Today', offset: 0 },
                         { label: 'Tomorrow', offset: 1 },
@@ -563,532 +567,426 @@ export const BookingPage: React.FC<BookingPageProps> = ({ onNavigate, initialRes
                         return (
                           <button
                             key={p.offset}
-                            onClick={() => setSelectedDate(pDate)}
-                            className={`p-4 rounded-2xl border text-center transition-all ${
+                            type="button"
+                            onClick={() => {
+                              setSelectedDate(pDate);
+                              setSelectedSlot(null);
+                            }}
+                            className={`p-3 rounded-xl border text-center transition-all ${
                               isSelected
-                                ? 'bg-brand-surfaceElevated border-brand-terracotta ring-2 ring-brand-terracotta/40 text-brand-cream'
+                                ? 'bg-brand-surfaceElevated border-brand-terracotta ring-2 ring-brand-terracotta/40 text-brand-cream shadow-md'
                                 : 'bg-brand-surfaceElevated/50 border-brand-border text-brand-subtle hover:text-brand-cream hover:bg-brand-surfaceElevated'
                             }`}
                           >
-                            <span className="text-xs font-bold uppercase tracking-wider block text-brand-terracotta">
+                            <span className="text-[11px] font-bold uppercase tracking-wider block text-brand-terracotta">
                               {p.label}
                             </span>
-                            <span className="text-sm font-serif font-bold text-brand-cream mt-0.5 block">
-                              {getReadableDate(pDate)}
+                            <span className="text-xs font-mono font-medium text-brand-cream mt-0.5 block truncate">
+                              {pDate.slice(5)}
                             </span>
+                          </button>
+                        );
+                      })}
+
+                      {/* Custom Date Input */}
+                      <div className="relative">
+                        <input
+                          type="date"
+                          min={todayStr}
+                          value={selectedDate}
+                          onChange={(e) => {
+                            setSelectedDate(e.target.value);
+                            setSelectedSlot(null);
+                          }}
+                          className="w-full h-full min-h-[52px] bg-brand-surfaceElevated/50 border border-brand-border rounded-xl px-2.5 py-2 text-brand-cream font-mono text-xs focus:outline-none focus:border-brand-terracotta text-center cursor-pointer hover:bg-brand-surfaceElevated"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Duration Selection */}
+                  <div className="space-y-2.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle flex items-center gap-1.5 font-semibold">
+                        <Clock className="w-3.5 h-3.5 text-brand-gold" />
+                        <span>2. Select Duration</span>
+                      </label>
+                      <span className="text-xs font-mono text-brand-gold font-bold">
+                        Hourly Rate: ₹{selectedResource?.ratePerHour}/hr
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+                      {[
+                        { mins: 30, label: '30 Mins', badge: 'Quick Match' },
+                        { mins: 60, label: '1 Hour', badge: 'Most Popular', popular: true },
+                        { mins: 90, label: '1.5 Hours', badge: 'Extended Session' },
+                        { mins: 120, label: '2 Hours', badge: 'Championship' },
+                      ].map((opt) => {
+                        const isSelected = durationMinutes === opt.mins;
+                        const cost = selectedResource ? Math.round((selectedResource.ratePerHour * opt.mins) / 60) : 0;
+
+                        return (
+                          <button
+                            key={opt.mins}
+                            type="button"
+                            onClick={() => {
+                              setDurationMinutes(opt.mins);
+                              setSelectedSlot(null);
+                            }}
+                            className={`p-3 rounded-xl border text-center transition-all cursor-pointer relative flex flex-col justify-between ${
+                              isSelected
+                                ? 'bg-brand-surfaceElevated border-brand-terracotta ring-2 ring-brand-terracotta/40 text-brand-cream shadow-md -translate-y-0.5'
+                                : 'bg-brand-surfaceElevated/50 border-brand-border text-brand-subtle hover:text-brand-cream hover:bg-brand-surfaceElevated'
+                            }`}
+                          >
+                            {opt.popular && (
+                              <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.2 rounded-full bg-brand-gold text-brand-dark text-[8px] font-mono font-bold uppercase tracking-wider shadow">
+                                {opt.badge}
+                              </span>
+                            )}
+                            <div className="font-serif text-sm sm:text-base font-bold text-brand-cream">
+                              {opt.label}
+                            </div>
+                            <div className="text-xs font-mono font-bold text-brand-gold mt-1">
+                              ₹{cost}
+                            </div>
                           </button>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* Custom HTML5 Date Input */}
-                  <div className="space-y-2 pt-2">
-                    <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle block">
-                      Or Pick Any Date (Up to 60 days ahead)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        min={todayStr}
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                        className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-3.5 text-brand-cream font-mono text-sm focus:outline-none focus:border-brand-terracotta"
-                      />
+                  {/* 3. Live Time Slots Grid */}
+                  <div className="space-y-2.5 pt-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
+                      <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle flex items-center gap-1.5 font-semibold">
+                        <Sparkles className="w-3.5 h-3.5 text-brand-terracotta" />
+                        <span>3. Pick Available Time Slot</span>
+                      </label>
+
+                      {/* Legend */}
+                      <div className="flex items-center gap-3 text-[10px] font-mono">
+                        <span className="flex items-center gap-1 text-emerald-400">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                          Available
+                        </span>
+                        <span className="flex items-center gap-1 text-red-400">
+                          <span className="w-2 h-2 rounded-full bg-red-500" />
+                          Booked
+                        </span>
+                        <span className="flex items-center gap-1 text-amber-400">
+                          <span className="w-2 h-2 rounded-full bg-amber-500" />
+                          Playing Now
+                        </span>
+                      </div>
                     </div>
+
+                    {loadingSlots ? (
+                      <div className="py-12 text-center space-y-2 bg-brand-dark/40 rounded-2xl border border-brand-border/40">
+                        <RefreshCw className="w-6 h-6 text-brand-terracotta animate-spin mx-auto" />
+                        <p className="text-xs font-mono text-brand-subtle">
+                          Checking real-time slot availability from database...
+                        </p>
+                      </div>
+                    ) : slotsError ? (
+                      <div className="p-4 rounded-xl bg-red-950/40 border border-red-800 text-center space-y-1">
+                        <AlertCircle className="w-5 h-5 text-red-400 mx-auto" />
+                        <p className="text-xs text-red-200">{slotsError}</p>
+                      </div>
+                    ) : slots.length === 0 ? (
+                      <div className="py-8 text-center text-xs text-brand-subtle bg-brand-dark/40 rounded-2xl border border-brand-border/40">
+                        No slots available for this date and duration. Please select another date.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-[260px] overflow-y-auto pr-1">
+                        {slots.map((s, idx) => {
+                          const isSelected = selectedSlot?.startTime === s.startTime;
+                          const isAvailable = s.status === 'available';
+
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              disabled={!isAvailable}
+                              onClick={() => {
+                                if (isAvailable) setSelectedSlot(s);
+                              }}
+                              className={`p-2.5 rounded-xl border text-left transition-all relative flex flex-col justify-between ${
+                                isSelected
+                                  ? 'bg-brand-terracotta text-brand-cream border-brand-terracotta ring-2 ring-brand-terracotta/40 shadow-lg scale-102'
+                                  : s.status === 'available'
+                                  ? 'bg-brand-surfaceElevated border-emerald-900/40 text-brand-cream hover:border-emerald-500 hover:bg-emerald-950/20 cursor-pointer'
+                                  : s.status === 'playing'
+                                  ? 'bg-amber-950/20 border-amber-900/30 text-amber-500/60 cursor-not-allowed opacity-60'
+                                  : s.status === 'booked'
+                                  ? 'bg-red-950/20 border-red-900/30 text-red-500/60 cursor-not-allowed opacity-60'
+                                  : 'bg-stone-900/40 border-stone-800 text-stone-600 cursor-not-allowed opacity-40'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <span className="font-mono text-xs font-bold">
+                                  {formatTime12(s.startTime)}
+                                </span>
+                                <span
+                                  className={`w-2 h-2 rounded-full ${
+                                    isSelected
+                                      ? 'bg-white'
+                                      : s.status === 'available'
+                                      ? 'bg-emerald-400'
+                                      : s.status === 'playing'
+                                      ? 'bg-amber-400'
+                                      : s.status === 'booked'
+                                      ? 'bg-red-400'
+                                      : 'bg-stone-600'
+                                  }`}
+                                />
+                              </div>
+
+                              <div className="flex items-center justify-between mt-1 text-[10px] font-mono opacity-80">
+                                <span>to {formatTime12(s.endTime)}</span>
+                                <span className="uppercase text-[9px]">
+                                  {isSelected ? '✓ Selected' : s.status}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
-                  {/* GioCasa Operating Hours Banner */}
-                  <div className="p-4 rounded-2xl bg-brand-dark/80 border border-brand-border/60 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-brand-gold shrink-0" />
-                      <span className="text-brand-subtle">
-                        Operating Hours: <strong className="text-brand-cream">{operatingHours.open} – {operatingHours.close === '24:00' ? 'Midnight' : operatingHours.close} IST</strong>
+                  {/* Selected Slot Callout Pill */}
+                  {selectedSlot && (
+                    <div className="p-3.5 rounded-2xl bg-brand-surfaceElevated border border-brand-terracotta/60 flex items-center justify-between text-xs animate-fade-in shadow-md">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span className="text-brand-cream font-medium">
+                          Selected Slot: <strong className="text-brand-terracotta">{formatTime12(selectedSlot.startTime)} – {formatTime12(selectedSlot.endTime)}</strong> ({durationMinutes} mins)
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold text-brand-gold text-sm">
+                        ₹{calculateTotal()}
                       </span>
                     </div>
-                    <span className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Live Slot Sync</span>
-                    </span>
-                  </div>
+                  )}
 
                   {/* Navigation Buttons */}
-                  <div className="pt-6 flex items-center justify-between border-t border-brand-border/40">
+                  <div className="pt-4 flex items-center justify-between border-t border-brand-border/40">
                     <button
+                      type="button"
                       onClick={() => setStep(1)}
                       className="px-6 py-3 rounded-full bg-brand-surfaceElevated border border-brand-border text-brand-cream text-xs uppercase tracking-wider font-semibold flex items-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" />
-                      <span>Back</span>
+                      <span>Back to Station</span>
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => setStep(3)}
-                      disabled={!selectedDate}
-                      className="px-8 py-3.5 rounded-full bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream font-semibold text-xs uppercase tracking-widest transition-all shadow-luxury-ember flex items-center gap-2 group"
+                      disabled={!selectedSlot}
+                      className="px-8 py-3.5 rounded-full bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream font-semibold text-xs uppercase tracking-widest transition-all shadow-luxury-ember flex items-center gap-2 group disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <span>Choose Duration</span>
+                      <span>Next: Enter Details</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: CHOOSE DURATION */}
+              {/* STEP 3: GUEST DETAILS & INSTANT CONFIRMATION */}
               {step === 3 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="flex items-center justify-between pb-4 border-b border-brand-border/60">
-                    <div>
-                      <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">Step 3 of 6</span>
-                      <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-cream">
-                        Select Session Duration
-                      </h2>
-                    </div>
-                    <span className="text-xs font-mono text-brand-subtle hidden sm:inline">
-                      Date: <strong className="text-brand-cream">{getReadableDate(selectedDate)}</strong>
-                    </span>
+                  <div className="pb-4 border-b border-brand-border/60">
+                    <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">Step 3 of 3</span>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-cream">
+                      Guest Details & Review
+                    </h2>
                   </div>
 
-                  {/* Duration Options Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                    {[
-                      { mins: 30, label: '30 Minutes', badge: 'Quick Match' },
-                      { mins: 60, label: '1 Hour', badge: 'Most Popular', popular: true },
-                      { mins: 90, label: '1.5 Hours', badge: 'Extended Session' },
-                      { mins: 120, label: '2 Hours', badge: 'Championship' },
-                    ].map((opt) => {
-                      const isSelected = durationMinutes === opt.mins;
-                      const cost = selectedResource ? Math.round((selectedResource.ratePerHour * opt.mins) / 60) : 0;
+                  {submissionError && (
+                    <div className="p-4 rounded-xl bg-red-950/60 border border-red-700 text-xs text-red-200 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                      <span>{submissionError}</span>
+                    </div>
+                  )}
 
-                      return (
-                        <div
-                          key={opt.mins}
-                          onClick={() => setDurationMinutes(opt.mins)}
-                          className={`p-4 sm:p-5 rounded-2xl border text-center transition-all cursor-pointer relative flex flex-col justify-between ${
-                            isSelected
-                              ? 'bg-brand-surfaceElevated border-brand-terracotta ring-2 ring-brand-terracotta/40 text-brand-cream shadow-xl -translate-y-0.5'
-                              : 'bg-brand-surfaceElevated/50 border-brand-border text-brand-subtle hover:text-brand-cream hover:bg-brand-surfaceElevated'
-                          }`}
-                        >
-                          {opt.popular && (
-                            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-brand-gold text-brand-dark text-[9px] font-mono font-bold uppercase tracking-wider shadow-md">
-                              {opt.badge}
+                  {/* 2-Column Layout */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column: Form Details (7 cols) */}
+                    <div className="lg:col-span-7 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Full Name */}
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
+                            Full Name <span className="text-brand-terracotta">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Rahul Sharma"
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                            className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-3 text-brand-cream text-sm focus:outline-none focus:border-brand-terracotta"
+                          />
+                        </div>
+
+                        {/* Phone Number */}
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
+                            Mobile Number (+91) <span className="text-brand-terracotta">*</span>
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-brand-subtle">
+                              +91
                             </span>
-                          )}
-
-                          <div className="space-y-1">
-                            <span className="font-serif text-xl sm:text-2xl font-bold text-brand-cream block">
-                              {opt.label}
-                            </span>
-                            <span className="text-xs font-mono text-brand-subtle">{opt.badge}</span>
-                          </div>
-
-                          <div className="pt-4 mt-3 border-t border-brand-border/40">
-                            <span className="font-mono text-lg font-bold text-brand-gold">₹{cost}</span>
-                            <span className="text-[10px] text-brand-subtle block">Total Rate</span>
+                            <input
+                              type="tel"
+                              required
+                              maxLength={10}
+                              placeholder="98765 43210"
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                              className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl pl-12 pr-4 py-3 text-brand-cream text-sm font-mono focus:outline-none focus:border-brand-terracotta"
+                            />
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
 
-                  {/* Dynamic Pricing Note */}
-                  <div className="p-4 rounded-2xl bg-brand-dark/80 border border-brand-border/60 text-xs text-brand-subtle flex items-center justify-between">
-                    <span>
-                      Hourly Rate: <strong className="text-brand-cream">₹{selectedResource?.ratePerHour}/hr</strong>
-                    </span>
-                    <span className="font-mono text-brand-gold font-bold">
-                      Calculated Total: ₹{calculateTotal()}
-                    </span>
-                  </div>
+                        {/* Email */}
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
+                            Email Address <span className="text-brand-muted text-[10px]">(Optional for receipt)</span>
+                          </label>
+                          <input
+                            type="email"
+                            placeholder="rahul@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-3 text-brand-cream text-sm focus:outline-none focus:border-brand-terracotta"
+                          />
+                        </div>
 
-                  {/* Navigation Buttons */}
-                  <div className="pt-6 flex items-center justify-between border-t border-brand-border/40">
-                    <button
-                      onClick={() => setStep(2)}
-                      className="px-6 py-3 rounded-full bg-brand-surfaceElevated border border-brand-border text-brand-cream text-xs uppercase tracking-wider font-semibold flex items-center gap-2"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      <span>Back</span>
-                    </button>
+                        {/* Number of Players */}
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
+                            Number of Players (Max {selectedResource?.playersCapacity.max})
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setNumberOfPeople(Math.max(selectedResource?.playersCapacity.min || 1, numberOfPeople - 1))}
+                              className="w-11 h-11 rounded-xl bg-brand-surfaceElevated border border-brand-border text-brand-cream font-bold text-lg flex items-center justify-center hover:bg-brand-surface"
+                            >
+                              -
+                            </button>
+                            <span className="font-mono text-lg font-bold text-brand-gold w-8 text-center">
+                              {numberOfPeople}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setNumberOfPeople(Math.min(selectedResource?.playersCapacity.max || 4, numberOfPeople + 1))}
+                              className="w-11 h-11 rounded-xl bg-brand-surfaceElevated border border-brand-border text-brand-cream font-bold text-lg flex items-center justify-center hover:bg-brand-surface"
+                            >
+                              +
+                            </button>
+                            <span className="text-xs text-brand-subtle font-mono">
+                              ({selectedResource?.playersCapacity.min}–{selectedResource?.playersCapacity.max} allowed)
+                            </span>
+                          </div>
+                        </div>
 
-                    <button
-                      onClick={() => setStep(4)}
-                      className="px-8 py-3.5 rounded-full bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream font-semibold text-xs uppercase tracking-widest transition-all shadow-luxury-ember flex items-center gap-2 group"
-                    >
-                      <span>Choose Time Slot</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 4: CHOOSE TIME SLOT */}
-              {step === 4 && (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-brand-border/60">
-                    <div>
-                      <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">Step 4 of 6</span>
-                      <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-cream">
-                        Select Available Time Slot
-                      </h2>
-                    </div>
-
-                    {/* Status Legend */}
-                    <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono">
-                      <span className="flex items-center gap-1.5 text-emerald-400">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                        Available
-                      </span>
-                      <span className="flex items-center gap-1.5 text-red-400">
-                        <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                        Booked
-                      </span>
-                      <span className="flex items-center gap-1.5 text-amber-400">
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                        Playing Now
-                      </span>
-                      <span className="flex items-center gap-1.5 text-stone-500">
-                        <span className="w-2.5 h-2.5 rounded-full bg-stone-600" />
-                        Unavailable
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Slots Loading Indicator */}
-                  {loadingSlots ? (
-                    <div className="py-16 text-center space-y-3">
-                      <RefreshCw className="w-8 h-8 text-brand-terracotta animate-spin mx-auto" />
-                      <p className="text-xs font-mono text-brand-subtle">
-                        Querying real-time slot conflicts from database...
-                      </p>
-                    </div>
-                  ) : slotsError ? (
-                    <div className="p-6 rounded-2xl bg-red-950/40 border border-red-800 text-center space-y-2">
-                      <AlertCircle className="w-6 h-6 text-red-400 mx-auto" />
-                      <p className="text-xs text-red-200">{slotsError}</p>
-                    </div>
-                  ) : slots.length === 0 ? (
-                    <div className="py-12 text-center text-xs text-brand-subtle">
-                      No slots available for this duration and date. Please try another date or shorter duration.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 max-h-[360px] overflow-y-auto pr-1">
-                      {slots.map((s, idx) => {
-                        const isSelected = selectedSlot?.startTime === s.startTime;
-                        const isAvailable = s.status === 'available';
-
-                        return (
-                          <button
-                            key={idx}
-                            disabled={!isAvailable}
-                            onClick={() => {
-                              if (isAvailable) setSelectedSlot(s);
-                            }}
-                            className={`p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between ${
-                              isSelected
-                                ? 'bg-brand-terracotta text-brand-cream border-brand-terracotta ring-2 ring-brand-terracotta/40 shadow-lg scale-102'
-                                : s.status === 'available'
-                                ? 'bg-brand-surfaceElevated border-emerald-900/40 text-brand-cream hover:border-emerald-500 hover:bg-emerald-950/20 cursor-pointer'
-                                : s.status === 'playing'
-                                ? 'bg-amber-950/20 border-amber-900/30 text-amber-500/60 cursor-not-allowed opacity-60'
-                                : s.status === 'booked'
-                                ? 'bg-red-950/20 border-red-900/30 text-red-500/60 cursor-not-allowed opacity-60'
-                                : 'bg-stone-900/40 border-stone-800 text-stone-600 cursor-not-allowed opacity-40'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <span className="font-mono text-xs font-bold">
-                                {formatTime12(s.startTime)}
-                              </span>
-                              <span
-                                className={`w-2 h-2 rounded-full ${
-                                  isSelected
-                                    ? 'bg-white'
-                                    : s.status === 'available'
-                                    ? 'bg-emerald-400'
-                                    : s.status === 'playing'
-                                    ? 'bg-amber-400'
-                                    : s.status === 'booked'
-                                    ? 'bg-red-400'
-                                    : 'bg-stone-600'
-                                }`}
-                              />
-                            </div>
-
-                            <div className="flex items-center justify-between mt-1 text-[10px] font-mono opacity-80">
-                              <span>Until {formatTime12(s.endTime)}</span>
-                              <span className="uppercase text-[9px]">
-                                {isSelected ? 'Selected' : s.status}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Navigation Buttons */}
-                  <div className="pt-6 flex items-center justify-between border-t border-brand-border/40">
-                    <button
-                      onClick={() => setStep(3)}
-                      className="px-6 py-3 rounded-full bg-brand-surfaceElevated border border-brand-border text-brand-cream text-xs uppercase tracking-wider font-semibold flex items-center gap-2"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      <span>Back</span>
-                    </button>
-
-                    <button
-                      onClick={() => setStep(5)}
-                      disabled={!selectedSlot}
-                      className="px-8 py-3.5 rounded-full bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream font-semibold text-xs uppercase tracking-widest transition-all shadow-luxury-ember flex items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <span>Customer Details</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 5: CUSTOMER DETAILS */}
-              {step === 5 && (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="pb-4 border-b border-brand-border/60">
-                    <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">Step 5 of 6</span>
-                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-cream">
-                      Guest & Contact Details
-                    </h2>
-                  </div>
-
-                  {submissionError && (
-                    <div className="p-4 rounded-xl bg-red-950/60 border border-red-700 text-xs text-red-200 flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-                      <span>{submissionError}</span>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Full Name */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
-                        Full Name <span className="text-brand-terracotta">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Rahul Sharma"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-3 text-brand-cream text-sm focus:outline-none focus:border-brand-terracotta"
-                      />
-                    </div>
-
-                    {/* Phone Number */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
-                        Phone Number (+91) <span className="text-brand-terracotta">*</span>
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-brand-subtle">
-                          +91
-                        </span>
-                        <input
-                          type="tel"
-                          required
-                          maxLength={10}
-                          placeholder="98765 43210"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                          className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl pl-12 pr-4 py-3 text-brand-cream text-sm font-mono focus:outline-none focus:border-brand-terracotta"
-                        />
+                        {/* Special Requests */}
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
+                            Special Requests / Notes <span className="text-brand-muted text-[10px]">(Optional)</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            placeholder="e.g. Need 4 controllers for FIFA, tournament setup..."
+                            value={specialRequests}
+                            onChange={(e) => setSpecialRequests(e.target.value)}
+                            className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-2.5 text-brand-cream text-xs focus:outline-none focus:border-brand-terracotta"
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    {/* Email */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
-                        Email Address <span className="text-brand-muted text-[10px]">(Optional for receipt)</span>
-                      </label>
-                      <input
-                        type="email"
-                        placeholder="rahul@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-3 text-brand-cream text-sm focus:outline-none focus:border-brand-terracotta"
-                      />
-                    </div>
-
-                    {/* Number of Players */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
-                        Number of Players (Max {selectedResource?.playersCapacity.max})
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setNumberOfPeople(Math.max(selectedResource?.playersCapacity.min || 1, numberOfPeople - 1))}
-                          className="w-11 h-11 rounded-xl bg-brand-surfaceElevated border border-brand-border text-brand-cream font-bold text-lg flex items-center justify-center hover:bg-brand-surface"
-                        >
-                          -
-                        </button>
-                        <span className="font-mono text-lg font-bold text-brand-gold w-8 text-center">
-                          {numberOfPeople}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setNumberOfPeople(Math.min(selectedResource?.playersCapacity.max || 4, numberOfPeople + 1))}
-                          className="w-11 h-11 rounded-xl bg-brand-surfaceElevated border border-brand-border text-brand-cream font-bold text-lg flex items-center justify-center hover:bg-brand-surface"
-                        >
-                          +
-                        </button>
-                        <span className="text-xs text-brand-subtle font-mono">
-                          ({selectedResource?.playersCapacity.min}–{selectedResource?.playersCapacity.max} allowed)
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Special Requests */}
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle">
-                        Special Requests / Notes <span className="text-brand-muted text-[10px]">(Optional)</span>
-                      </label>
-                      <textarea
-                        rows={2}
-                        placeholder="e.g. Need 4 controllers for FIFA, celebrating birthday, tournament setup..."
-                        value={specialRequests}
-                        onChange={(e) => setSpecialRequests(e.target.value)}
-                        className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-2.5 text-brand-cream text-xs focus:outline-none focus:border-brand-terracotta"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Navigation Buttons */}
-                  <div className="pt-6 flex items-center justify-between border-t border-brand-border/40">
-                    <button
-                      onClick={() => setStep(4)}
-                      className="px-6 py-3 rounded-full bg-brand-surfaceElevated border border-brand-border text-brand-cream text-xs uppercase tracking-wider font-semibold flex items-center gap-2"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      <span>Back</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (!customerName.trim() || phone.replace(/\D/g, '').length < 10) {
-                          setSubmissionError('Please fill in your name and a valid 10-digit mobile number.');
-                          return;
-                        }
-                        setStep(6);
-                      }}
-                      className="px-8 py-3.5 rounded-full bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream font-semibold text-xs uppercase tracking-widest transition-all shadow-luxury-ember flex items-center gap-2 group"
-                    >
-                      <span>Review Summary</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 6: BOOKING SUMMARY & CONFIRMATION */}
-              {step === 6 && (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="pb-4 border-b border-brand-border/60">
-                    <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">Step 6 of 6</span>
-                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-cream">
-                      Booking Summary & Review
-                    </h2>
-                  </div>
-
-                  {submissionError && (
-                    <div className="p-4 rounded-xl bg-red-950/60 border border-red-700 text-xs text-red-200 flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-                      <span>{submissionError}</span>
-                    </div>
-                  )}
-
-                  {/* Boarding Pass Style Summary Card */}
-                  <div className="rounded-2xl bg-brand-dark/95 border border-brand-border/90 p-6 space-y-5 shadow-2xl relative">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-brand-border/40 gap-3">
-                      <div>
+                    {/* Right Column: Live Boarding Pass Summary & Confirm (5 cols) */}
+                    <div className="lg:col-span-5 rounded-2xl bg-brand-dark/95 border border-brand-border/90 p-5 space-y-4 shadow-xl">
+                      <div className="pb-3 border-b border-brand-border/40">
                         <span className="text-[10px] font-mono uppercase tracking-widest text-brand-gold block">
-                          Level 1 • The Arena
+                          Reservation Ticket
                         </span>
-                        <h3 className="font-serif text-xl sm:text-2xl font-bold text-brand-cream">
+                        <h3 className="font-serif text-lg font-bold text-brand-cream mt-0.5">
                           {selectedResource?.name}
                         </h3>
                       </div>
-                      <span className="px-3 py-1 rounded-full bg-brand-terracotta/20 border border-brand-terracotta text-brand-terracotta font-mono font-bold text-xs shrink-0">
-                        {durationMinutes} Minutes Session
-                      </span>
+
+                      <div className="space-y-2 text-xs">
+                        <div className="flex justify-between py-1 border-b border-brand-border/30">
+                          <span className="text-brand-subtle">Date:</span>
+                          <span className="font-semibold text-brand-cream">{getReadableDate(selectedDate)}</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-brand-border/30">
+                          <span className="text-brand-subtle">Time Slot:</span>
+                          <span className="font-semibold text-brand-gold font-mono">
+                            {selectedSlot ? `${formatTime12(selectedSlot.startTime)} – ${formatTime12(selectedSlot.endTime)}` : ''}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-brand-border/30">
+                          <span className="text-brand-subtle">Duration:</span>
+                          <span className="font-mono text-brand-cream">{durationMinutes} Minutes</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-brand-border/30">
+                          <span className="text-brand-subtle">Players:</span>
+                          <span className="font-mono text-brand-cream">{numberOfPeople} Guests</span>
+                        </div>
+                        <div className="flex justify-between py-1 border-b border-brand-border/30">
+                          <span className="text-brand-subtle">Payment Mode:</span>
+                          <span className="font-semibold text-emerald-400">Pay at Venue</span>
+                        </div>
+                      </div>
+
+                      {/* Total Price Callout */}
+                      <div className="p-3.5 rounded-xl bg-brand-surfaceElevated border border-brand-border/60 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-mono uppercase text-brand-subtle block">Total Amount</span>
+                          <span className="text-[10px] text-emerald-400">✓ Zero deposit required</span>
+                        </div>
+                        <span className="font-serif text-2xl font-bold text-brand-gold">
+                          ₹{calculateTotal()}
+                        </span>
+                      </div>
+
+                      {/* Big Submit Button */}
+                      <button
+                        type="button"
+                        onClick={handleConfirmBooking}
+                        disabled={submitting}
+                        className="w-full py-4 rounded-full bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream font-bold text-xs uppercase tracking-widest transition-all shadow-luxury-ember flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed group"
+                      >
+                        {submitting ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            <span>Locking Your Slot...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>CONFIRM BOOKING</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setStep(2)}
+                        className="w-full text-center text-xs text-brand-subtle hover:text-brand-cream transition-colors pt-1"
+                      >
+                        ← Change Schedule
+                      </button>
                     </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                      <div>
-                        <span className="text-[10px] font-mono text-brand-subtle block uppercase">Date</span>
-                        <span className="font-semibold text-brand-cream mt-0.5 block">
-                          {getReadableDate(selectedDate)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-mono text-brand-subtle block uppercase">Time Slot</span>
-                        <span className="font-semibold text-brand-gold mt-0.5 block">
-                          {selectedSlot ? `${formatTime12(selectedSlot.startTime)} – ${formatTime12(selectedSlot.endTime)}` : ''}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-mono text-brand-subtle block uppercase">Guest Name</span>
-                        <span className="font-semibold text-brand-cream mt-0.5 block">{customerName}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-mono text-brand-subtle block uppercase">Mobile</span>
-                        <span className="font-mono font-semibold text-brand-cream mt-0.5 block">+91 {phone}</span>
-                      </div>
-                    </div>
-
-                    {/* Price Breakdown */}
-                    <div className="p-4 rounded-xl bg-brand-surfaceElevated/60 border border-brand-border/40 flex items-center justify-between">
-                      <div className="text-xs">
-                        <span className="text-brand-subtle">
-                          Base Rate: ₹{selectedResource?.ratePerHour}/hr × {durationMinutes / 60}h ({numberOfPeople} Players)
-                        </span>
-                        <span className="text-[10px] text-emerald-400 block mt-0.5">
-                          ✓ No hidden gaming surcharges • Pay at venue
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[10px] font-mono text-brand-subtle uppercase block">Total Amount</span>
-                        <span className="font-serif text-2xl font-bold text-brand-gold">₹{calculateTotal()}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Submit / Back Action */}
-                  <div className="pt-6 flex items-center justify-between border-t border-brand-border/40">
-                    <button
-                      onClick={() => setStep(5)}
-                      className="px-6 py-3 rounded-full bg-brand-surfaceElevated border border-brand-border text-brand-cream text-xs uppercase tracking-wider font-semibold flex items-center gap-2"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      <span>Back</span>
-                    </button>
-
-                    <button
-                      onClick={handleConfirmBooking}
-                      disabled={submitting}
-                      className="px-10 py-4 rounded-full bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream font-bold text-xs uppercase tracking-widest transition-all shadow-luxury-ember flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {submitting ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Verifying & Locking Slot...</span>
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>CONFIRM BOOKING</span>
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
               )}
