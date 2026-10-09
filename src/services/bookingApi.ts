@@ -248,4 +248,18 @@ export const bookingApi = {
     if (!json.success) throw new Error(json.error || 'Failed to update resource maintenance');
     return json.data;
   },
+
+  async changeAdminPasscode(currentPasscode: string, newPasscode: string): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${API_BASE}/admin/change-passcode`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-passcode': currentPasscode,
+      },
+      body: JSON.stringify({ currentPasscode, newPasscode }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Failed to update passcode');
+    return json;
+  },
 };

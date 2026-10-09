@@ -85,6 +85,8 @@ class DatabaseService {
   private fileResources: GamingResource[] = [...INITIAL_RESOURCES];
   private bookingsFilePath = path.join(DATA_DIR, 'bookings.json');
   private resourcesFilePath = path.join(DATA_DIR, 'resources.json');
+  private settingsFilePath = path.join(DATA_DIR, 'settings.json');
+  private cachedAdminPasscode: string | null = null;
 
   async init(): Promise<void> {
     // Ensure data directory exists
@@ -542,6 +544,73 @@ class DatabaseService {
     }
 
     return refreshed;
+  }
+
+  // ======================== ADMIN SETTINGS ========================
+
+  async getAdminPasscode(): Promise<string> {
+    if (this.cachedAdminPasscode) {
+      return this.cachedAdminPasscode;
+    }
+
+    if (this.isMongoConnected && this.db) {
+      try {
+        const doc = await this.db.collection('settings').findOne({ key: 'admin_passcode' });
+        if (doc && doc.value) {
+          this.cachedAdminPasscode = doc.value;
+          return doc.value;
+        }
+      } catch (err) {
+        console.error('Error fetching admin passcode from Mongo:', err);
+      }
+    } else {
+      try {
+        if (fs.existsSync(this.settingsFilePath)) {
+          const raw = fs.readFileSync(this.settingsFilePath, 'utf-8');
+          const data = JSON.parse(raw);
+          if (data.admin_passcode) {
+            this.cachedAdminPasscode = data.admin_passcode;
+            return data.admin_passcode;
+          }
+        }
+      } catch (err) {
+        console.error('Error reading settings file:', err);
+      }
+    }
+
+    this.cachedAdminPasscode = config.adminPasscode;
+    return config.adminPasscode;
+  }
+
+  async setAdminPasscode(newPasscode: string): Promise<void> {
+    this.cachedAdminPasscode = newPasscode;
+
+    if (this.isMongoConnected && this.db) {
+      try {
+        await this.db.collection('settings').updateOne(
+          { key: 'admin_passcode' },
+          { $set: { value: newPasscode, updatedAt: new Date().toISOString() } },
+          { upsert: true }
+        );
+      } catch (err) {
+        console.error('Error saving admin passcode to Mongo:', err);
+      }
+    }
+
+    // Always also persist to local file store
+    try {
+      let data: any = {};
+      if (fs.existsSync(this.settingsFilePath)) {
+        try {
+          data = JSON.parse(fs.readFileSync(this.settingsFilePath, 'utf-8'));
+        } catch {}
+      }
+      data.admin_passcode = newPasscode;
+      data.updatedAt = new Date().toISOString();
+      fs.writeFileSync(this.settingsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (err) {
+      console.error('Error saving settings to file:', err);
+    }
   }
 }
 

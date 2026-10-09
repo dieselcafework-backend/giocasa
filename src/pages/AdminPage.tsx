@@ -20,6 +20,7 @@ import {
   Phone,
   ArrowRight,
   Lock,
+  Key,
 } from 'lucide-react';
 
 interface AdminPageProps {
@@ -32,6 +33,15 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const [passcodeInput, setPasscodeInput] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Change Passcode Modal
+  const [showPasscodeModal, setShowPasscodeModal] = useState<boolean>(false);
+  const [currentPasscodeInput, setCurrentPasscodeInput] = useState<string>('');
+  const [newPasscodeInput, setNewPasscodeInput] = useState<string>('');
+  const [confirmPasscodeInput, setConfirmPasscodeInput] = useState<string>('');
+  const [passcodeModalError, setPasscodeModalError] = useState<string | null>(null);
+  const [passcodeModalSuccess, setPasscodeModalSuccess] = useState<string | null>(null);
+  const [passcodeSubmitting, setPasscodeSubmitting] = useState<boolean>(false);
 
   // Dashboard Data
   const [overview, setOverview] = useState<AdminOverviewData | null>(null);
@@ -85,7 +95,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
       localStorage.setItem('giocasa_admin_passcode', code);
     } catch (err: any) {
       setIsAuthenticated(false);
-      setAuthError('Invalid Admin Passcode. Default is GIOCASA2026.');
+      setAuthError('Invalid Admin Passcode. Default is GIOCASA2026 if not changed.');
     } finally {
       setLoading(false);
     }
@@ -96,6 +106,45 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     if (!passcodeInput.trim()) return;
     setPasscode(passcodeInput.trim());
     loadDashboard(passcodeInput.trim());
+  };
+
+  // Change Passcode Handler
+  const handleChangePasscode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasscodeModalError(null);
+    setPasscodeModalSuccess(null);
+
+    if (!currentPasscodeInput.trim()) {
+      setPasscodeModalError('Please enter your current passcode.');
+      return;
+    }
+    if (newPasscodeInput.trim().length < 6) {
+      setPasscodeModalError('New passcode must be at least 6 characters long.');
+      return;
+    }
+    if (newPasscodeInput !== confirmPasscodeInput) {
+      setPasscodeModalError('New passcodes do not match.');
+      return;
+    }
+
+    setPasscodeSubmitting(true);
+    try {
+      await bookingApi.changeAdminPasscode(currentPasscodeInput.trim(), newPasscodeInput.trim());
+      setPasscode(newPasscodeInput.trim());
+      localStorage.setItem('giocasa_admin_passcode', newPasscodeInput.trim());
+      setPasscodeModalSuccess('Admin passcode updated successfully!');
+      setTimeout(() => {
+        setShowPasscodeModal(false);
+        setCurrentPasscodeInput('');
+        setNewPasscodeInput('');
+        setConfirmPasscodeInput('');
+        setPasscodeModalSuccess(null);
+      }, 1500);
+    } catch (err: any) {
+      setPasscodeModalError(err.message || 'Failed to update passcode.');
+    } finally {
+      setPasscodeSubmitting(false);
+    }
   };
 
   // Toggle Resource Maintenance
@@ -268,7 +317,23 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => {
+                setCurrentPasscodeInput('');
+                setNewPasscodeInput('');
+                setConfirmPasscodeInput('');
+                setPasscodeModalError(null);
+                setPasscodeModalSuccess(null);
+                setShowPasscodeModal(true);
+              }}
+              className="px-3.5 py-2 rounded-xl bg-brand-surface border border-brand-border hover:border-brand-gold/50 text-brand-subtle hover:text-brand-cream text-xs font-mono flex items-center gap-1.5 transition-colors"
+              title="Change Admin Passcode"
+            >
+              <Key className="w-3.5 h-3.5 text-brand-gold" />
+              <span>Passcode</span>
+            </button>
+
             <button
               onClick={() => loadDashboard(passcode)}
               className="px-4 py-2 rounded-xl bg-brand-surface border border-brand-border text-brand-subtle hover:text-brand-cream text-xs font-mono flex items-center gap-1.5 transition-colors"
@@ -726,6 +791,107 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                     className="px-6 py-2.5 rounded-xl bg-brand-terracotta text-brand-cream font-bold uppercase tracking-wider"
                   >
                     {manualSubmitting ? 'Creating...' : 'Create Booking'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Passcode Change Modal */}
+        {showPasscodeModal && (
+          <div className="fixed inset-0 z-50 bg-brand-dark/85 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-brand-surface border border-brand-border rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl animate-fade-in">
+              <div className="flex items-center justify-between border-b border-brand-border/60 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center text-brand-gold">
+                    <Key className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-brand-cream">Change Admin Passcode</h3>
+                    <p className="text-xs text-brand-subtle">Update master credentials for GioCasa operations.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPasscodeModal(false)}
+                  className="text-brand-subtle hover:text-brand-cream p-1 rounded-lg"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              {passcodeModalError && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{passcodeModalError}</span>
+                </div>
+              )}
+
+              {passcodeModalSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>{passcodeModalSuccess}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleChangePasscode} className="space-y-4">
+                <div>
+                  <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle block mb-1.5">
+                    Current Passcode
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter current passcode"
+                    value={currentPasscodeInput}
+                    onChange={(e) => setCurrentPasscodeInput(e.target.value)}
+                    className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-2.5 text-brand-cream font-mono text-sm focus:outline-none focus:border-brand-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle block mb-1.5">
+                    New Passcode (Min. 6 chars)
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter new passcode"
+                    value={newPasscodeInput}
+                    onChange={(e) => setNewPasscodeInput(e.target.value)}
+                    className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-2.5 text-brand-cream font-mono text-sm focus:outline-none focus:border-brand-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-mono uppercase tracking-wider text-brand-subtle block mb-1.5">
+                    Confirm New Passcode
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Re-enter new passcode"
+                    value={confirmPasscodeInput}
+                    onChange={(e) => setConfirmPasscodeInput(e.target.value)}
+                    className="w-full bg-brand-surfaceElevated border border-brand-border rounded-xl px-4 py-2.5 text-brand-cream font-mono text-sm focus:outline-none focus:border-brand-gold"
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasscodeModal(false)}
+                    className="px-4 py-2.5 rounded-xl border border-brand-border text-brand-subtle hover:text-brand-cream text-xs font-mono"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passcodeSubmitting}
+                    className="px-6 py-2.5 rounded-xl bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream text-xs font-bold uppercase tracking-wider transition-all shadow-luxury-ember"
+                  >
+                    {passcodeSubmitting ? 'Updating...' : 'Save Passcode'}
                   </button>
                 </div>
               </form>

@@ -7,15 +7,47 @@ import { Booking, BookingStatus, PaymentStatus } from '../types';
 const router = Router();
 
 // Middleware: Verify Admin Passcode header
-export const requireAdminAuth = (req: Request, res: Response, next: NextFunction) => {
-  const passcode = req.headers['x-admin-passcode'] || req.query.passcode;
-  if (!passcode || passcode !== config.adminPasscode) {
-    return res.status(401).json({ success: false, error: 'Unauthorized: Invalid Admin Passcode.' });
+export const requireAdminAuth = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const passcode = req.headers['x-admin-passcode'] || req.query.passcode;
+    const currentPasscode = await dbService.getAdminPasscode();
+    if (!passcode || passcode !== currentPasscode) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid Admin Passcode.' });
+    }
+    next();
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Internal authentication error.' });
   }
-  next();
 };
 
 router.use(requireAdminAuth);
+
+// POST /api/admin/verify - Verify admin session
+router.post('/verify', (_req: Request, res: Response) => {
+  return res.json({ success: true, message: 'Passcode verified.' });
+});
+
+// POST /api/admin/change-passcode - Update admin passcode
+router.post('/change-passcode', async (req: Request, res: Response) => {
+  try {
+    const { currentPasscode, newPasscode } = req.body;
+    const activePasscode = await dbService.getAdminPasscode();
+
+    if (!currentPasscode || currentPasscode !== activePasscode) {
+      return res.status(400).json({ success: false, error: 'Current passcode is incorrect.' });
+    }
+
+    if (!newPasscode || typeof newPasscode !== 'string' || newPasscode.trim().length < 6) {
+      return res.status(400).json({ success: false, error: 'New passcode must be at least 6 characters long.' });
+    }
+
+    await dbService.setAdminPasscode(newPasscode.trim());
+    return res.json({ success: true, message: 'Admin passcode updated successfully.' });
+  } catch (err: any) {
+    console.error('Error changing admin passcode:', err);
+    return res.status(500).json({ success: false, error: 'Failed to change admin passcode.' });
+  }
+});
 
 // GET /api/admin/overview - Real-time operational dashboard overview
 router.get('/overview', async (_req: Request, res: Response) => {
