@@ -51,14 +51,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
   }, []);
 
   const navLinks: { id: PageRoute; label: string }[] = [
-    { id: 'home', label: 'Home' },
-    { id: 'experience', label: 'Experience' },
-    { id: 'menu', label: 'Menu & Pizza' },
-    { id: 'gaming', label: 'Gaming Lounge' },
+    { id: 'menu', label: 'Menu' },
+    { id: 'gaming', label: 'Gaming' },
     { id: 'tournaments', label: 'Arena' },
-    { id: 'book', label: 'Book Slot' },
     { id: 'events', label: 'Events' },
-    { id: 'about', label: 'About' },
+    { id: 'experience', label: 'Experience' },
     { id: 'contact', label: 'Contact' },
   ];
 
@@ -84,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
           isScrolled
             ? 'glass-dark py-3.5 shadow-luxury'
-            : 'bg-gradient-to-b from-brand-dark/90 via-brand-dark/40 to-transparent py-5 sm:py-6'
+            : 'bg-gradient-to-b from-brand-dark/90 via-brand-dark/40 to-transparent py-4 sm:py-5'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
@@ -93,6 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             onClick={() => handleNavClick('home')}
             className="flex items-center gap-3 text-left group focus:outline-none"
             aria-label="GioCasa Home"
+            title="GioCasa Home"
           >
             <div className="relative flex items-center justify-center w-9 h-9 rounded-full bg-brand-surfaceElevated border border-brand-border group-hover:border-brand-terracotta transition-colors">
               <span className="font-serif text-lg font-bold text-brand-cream group-hover:text-brand-terracotta transition-colors">
@@ -110,15 +108,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             </div>
           </button>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center gap-7">
+          {/* Desktop Nav Links - Clean, uncluttered & spacious */}
+          <nav className="hidden lg:flex items-center gap-8">
             {navLinks.map(link => {
               const isActive = currentPage === link.id;
               return (
                 <button
                   key={link.id}
                   onClick={() => handleNavClick(link.id)}
-                  className={`text-xs uppercase tracking-widest transition-all duration-200 relative py-1 ${
+                  className={`text-xs uppercase tracking-[0.2em] transition-all duration-200 relative py-1 ${
                     isActive
                       ? 'text-brand-cream font-semibold'
                       : 'text-brand-subtle hover:text-brand-cream font-medium'
@@ -126,20 +124,21 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
                 >
                   {link.label}
                   {isActive && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-brand-terracotta rounded-full" />
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3.5 h-0.5 bg-brand-terracotta rounded-full" />
                   )}
                 </button>
               );
             })}
           </nav>
 
-          {/* Desktop Actions */}
+          {/* Desktop Actions - Minimalist & refined */}
           <div className="hidden sm:flex items-center gap-3">
             {/* Pizza Cart Button */}
             <button
               onClick={openDrawer}
-              className="relative p-2.5 rounded-full bg-brand-surface hover:bg-brand-surfaceElevated border border-brand-border hover:border-brand-borderStrong text-brand-cream transition-all group"
+              className="relative p-2.5 rounded-full bg-brand-surface/80 hover:bg-brand-surfaceElevated border border-brand-border hover:border-brand-borderStrong text-brand-cream transition-all group"
               aria-label="Open Order Cart"
+              title="Cart / Pizza Order"
             >
               <ShoppingBag className="w-4 h-4 text-brand-cream group-hover:text-brand-terracotta transition-colors" />
               {totalItems > 0 && (
@@ -149,13 +148,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
               )}
             </button>
 
-            {/* Book / Reserve Button */}
+            {/* Primary Action Button */}
             <button
               onClick={() => handleNavClick('book')}
               className="inline-flex items-center gap-2 text-xs uppercase tracking-wider font-semibold px-5 py-2.5 rounded-full bg-brand-terracotta text-brand-cream hover:bg-brand-terracottaHover transition-all shadow-luxury-ember hover:-translate-y-0.5"
             >
               <CalendarDays className="w-3.5 h-3.5" />
-              <span>Book / Reserve</span>
+              <span>Book Slot</span>
             </button>
           </div>
 
@@ -205,12 +204,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             </button>
           </div>
 
-          <nav className="flex flex-col gap-4 py-8">
+          <nav className="flex flex-col gap-3 py-6">
+            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-brand-gold/70 pb-1">
+              Social House & Arena
+            </span>
             {navLinks.map((link, idx) => (
               <button
                 key={link.id}
                 onClick={() => handleNavClick(link.id)}
-                className="flex items-center justify-between text-left py-2 group border-b border-brand-border/40"
+                className="flex items-center justify-between text-left py-2 group border-b border-brand-border/30"
               >
                 <div className="flex items-baseline gap-3">
                   <span className="text-[10px] font-mono text-brand-terracotta">
@@ -225,6 +227,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
                 <ChevronRight className="w-4 h-4 text-brand-subtle group-hover:text-brand-cream transition-transform group-hover:translate-x-1" />
               </button>
             ))}
+
+            <div className="flex items-center gap-4 pt-3 text-xs text-brand-subtle">
+              <button
+                onClick={() => handleNavClick('about')}
+                className="hover:text-brand-cream transition-colors underline-offset-4 hover:underline"
+              >
+                Our Story
+              </button>
+              <span>•</span>
+              <button
+                onClick={() => handleNavClick('hall-of-fame')}
+                className="hover:text-brand-cream transition-colors underline-offset-4 hover:underline"
+              >
+                Hall of Fame
+              </button>
+            </div>
           </nav>
 
           <div className="space-y-4 pt-4 border-t border-brand-border">
