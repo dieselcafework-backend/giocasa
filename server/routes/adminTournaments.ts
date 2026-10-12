@@ -342,13 +342,82 @@ router.post('/hall-of-fame', async (req: Request, res: Response) => {
 // PUT /api/admin/hall-of-fame/:id - Update Hall of Fame entry
 router.put('/hall-of-fame/:id', async (req: Request, res: Response) => {
   try {
-    const updated = await dbService.updateHallOfFameEntry(req.params.id, req.body);
+    const { id } = req.params;
+    if (!id || typeof id !== 'string' || !id.trim()) {
+      return res.status(400).json({ success: false, error: 'Valid Hall of Fame entry ID is required.' });
+    }
+
+    const body = req.body;
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return res.status(400).json({ success: false, error: 'Request body must be a valid JSON object.' });
+    }
+
+    // Schema validation for editable fields if supplied
+    if ('playerName' in body) {
+      if (typeof body.playerName !== 'string' || !body.playerName.trim()) {
+        return res.status(400).json({ success: false, error: 'Winner / Player name cannot be empty.' });
+      }
+    }
+    if ('gameTitle' in body) {
+      if (typeof body.gameTitle !== 'string' || !body.gameTitle.trim()) {
+        return res.status(400).json({ success: false, error: 'Game title cannot be empty.' });
+      }
+    }
+    if ('eventDate' in body) {
+      if (typeof body.eventDate !== 'string' || !body.eventDate.trim()) {
+        return res.status(400).json({ success: false, error: 'Event date cannot be empty.' });
+      }
+    }
+    if ('order' in body) {
+      if (typeof body.order !== 'number' || isNaN(body.order)) {
+        return res.status(400).json({ success: false, error: 'Order must be a valid number.' });
+      }
+    }
+
+    // Whitelist only allowed editable fields from the schema.
+    // Explicitly exclude database-managed fields: _id, id, __v, createdAt, updatedAt
+    const allowedFields = [
+      'tournamentId',
+      'tournamentTitle',
+      'tournamentSlug',
+      'playerName',
+      'teamName',
+      'award',
+      'gameTitle',
+      'gameCategory',
+      'season',
+      'eventDate',
+      'scoreDescription',
+      'photoUrl',
+      'isFeatured',
+      'isPublished',
+      'order',
+    ] as const;
+
+    const sanitizedUpdates: Partial<HallOfFameEntry> = {};
+    for (const field of allowedFields) {
+      if (field in body && body[field] !== undefined) {
+        if (field === 'playerName') {
+          sanitizedUpdates.playerName = body.playerName.trim();
+        } else if (field === 'isFeatured') {
+          sanitizedUpdates.isFeatured = Boolean(body.isFeatured);
+        } else if (field === 'isPublished') {
+          sanitizedUpdates.isPublished = Boolean(body.isPublished);
+        } else if (field === 'order') {
+          sanitizedUpdates.order = Number(body.order);
+        } else {
+          (sanitizedUpdates as any)[field] = body[field];
+        }
+      }
+    }
+
+    const updated = await dbService.updateHallOfFameEntry(id.trim(), sanitizedUpdates);
     if (!updated) {
-      return res.status(404).json({ success: false, error: 'Entry not found.' });
+      return res.status(404).json({ success: false, error: 'Hall of Fame entry not found.' });
     }
     return res.json({
       success: true,
-      message: `Hall of Fame entry updated.`,
+      message: 'Hall of Fame entry updated.',
       data: updated,
     });
   } catch (err: any) {

@@ -930,7 +930,8 @@ class DatabaseService {
     };
 
     if (this.isMongoConnected && this.db) {
-      await this.db.collection<Tournament>('tournaments').updateOne({ id }, { $set: updated });
+      const { _id, ...fieldsToSet } = updated as any;
+      await this.db.collection<Tournament>('tournaments').updateOne({ id }, { $set: fieldsToSet });
     } else {
       const idx = this.fileTournaments.findIndex((t) => t.id === id);
       if (idx !== -1) {
@@ -1209,9 +1210,10 @@ class DatabaseService {
     };
 
     if (this.isMongoConnected && this.db) {
+      const { _id, ...fieldsToSet } = updated as any;
       await this.db
         .collection<TournamentRegistration>('tournament_registrations')
-        .updateOne({ id: existing.id }, { $set: updated });
+        .updateOne({ id: existing.id }, { $set: fieldsToSet });
     } else {
       const idx = this.fileRegistrations.findIndex((r) => r.id === existing.id);
       if (idx !== -1) {
@@ -1298,9 +1300,10 @@ class DatabaseService {
     };
 
     if (this.isMongoConnected && this.db) {
+      const { _id, ...fieldsToSet } = result as any;
       await this.db
         .collection<TournamentResult>('tournament_results')
-        .updateOne({ tournamentId: tournament.id }, { $set: result }, { upsert: true });
+        .updateOne({ tournamentId: tournament.id }, { $set: fieldsToSet }, { upsert: true });
     } else {
       const idx = this.fileResults.findIndex((r) => r.tournamentId === tournament.id);
       if (idx !== -1) {
@@ -1441,24 +1444,71 @@ class DatabaseService {
     const existing = await this.getHallOfFameEntry(id);
     if (!existing) return null;
 
-    const updated: HallOfFameEntry = {
-      ...existing,
-      ...updates,
-      id: existing.id,
-      updatedAt: new Date().toISOString(),
+    // Defense-in-depth: explicitly extract and exclude database-managed/immutable fields
+    const {
+      _id: _ignoreId,
+      id: _ignoreAppId,
+      __v: _ignoreV,
+      createdAt: _ignoreCreatedAt,
+      updatedAt: _ignoreUpdatedAt,
+      ...cleanUpdates
+    } = updates as any;
+
+    const nowIso = new Date().toISOString();
+
+    const allowedFields = [
+      'tournamentId',
+      'tournamentTitle',
+      'tournamentSlug',
+      'playerName',
+      'teamName',
+      'award',
+      'gameTitle',
+      'gameCategory',
+      'season',
+      'eventDate',
+      'scoreDescription',
+      'photoUrl',
+      'isFeatured',
+      'isPublished',
+      'order',
+    ] as const;
+
+    const fieldsToSet: Record<string, any> = {
+      updatedAt: nowIso,
     };
 
+    for (const key of allowedFields) {
+      if (key in cleanUpdates && cleanUpdates[key] !== undefined) {
+        fieldsToSet[key] = cleanUpdates[key];
+      }
+    }
+
+    // Explicitly guarantee _id is NEVER in $set
+    delete fieldsToSet._id;
+    delete fieldsToSet.id;
+    delete fieldsToSet.__v;
+    delete fieldsToSet.createdAt;
+
     if (this.isMongoConnected && this.db) {
-      await this.db.collection<HallOfFameEntry>('hall_of_fame').updateOne({ id }, { $set: updated });
+      await this.db.collection<HallOfFameEntry>('hall_of_fame').updateOne({ id }, { $set: fieldsToSet });
+      const fresh = await this.db.collection<HallOfFameEntry>('hall_of_fame').findOne({ id });
+      return fresh;
     } else {
+      const updated: HallOfFameEntry = {
+        ...existing,
+        ...fieldsToSet,
+        id: existing.id,
+        createdAt: existing.createdAt,
+      };
+      delete (updated as any)._id; // Keep file store pure or let it have existing id
       const idx = this.fileHallOfFame.findIndex((e) => e.id === id);
       if (idx !== -1) {
         this.fileHallOfFame[idx] = updated;
         this.saveHallOfFameToFile();
       }
+      return updated;
     }
-
-    return updated;
   }
 
   async deleteHallOfFameEntry(id: string): Promise<boolean> {
