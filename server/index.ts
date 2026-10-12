@@ -7,6 +7,9 @@ import { config } from './config';
 import { dbService } from './db';
 import bookingsRouter from './routes/bookings';
 import adminRouter from './routes/admin';
+import tournamentsRouter from './routes/tournaments';
+import hallOfFameRouter from './routes/hallOfFame';
+import adminTournamentsRouter from './routes/adminTournaments';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +18,14 @@ const app = express();
 
 // Middlewares
 app.use(cors({ origin: config.corsOrigin }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+// Static serving for user-uploaded tournament and champion images
+const uploadsPath = path.resolve(__dirname, '../public/assets/uploads');
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+app.use('/assets/uploads', express.static(uploadsPath));
 
 // Request logging
 app.use((req, res, next) => {
@@ -42,7 +52,10 @@ app.get('/api/health', (_req, res) => {
 // API Routes
 app.use('/api/booking', bookingsRouter);
 app.use('/api/bookings', bookingsRouter);
+app.use('/api/tournaments', tournamentsRouter);
+app.use('/api/hall-of-fame', hallOfFameRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/admin', adminTournamentsRouter);
 
 // 404 handler for unknown API routes
 app.use((req, res, next) => {

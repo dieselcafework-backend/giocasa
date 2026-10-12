@@ -76,3 +76,127 @@ export interface AdminBookingFilter {
   paymentStatus?: PaymentStatus;
   search?: string;
 }
+
+// ==========================================
+// GIOCASA ARENA TOURNAMENT TYPES
+// ==========================================
+
+export type TournamentStatus = 'draft' | 'published' | 'live' | 'completed' | 'cancelled';
+export type TournamentRegistrationStatus = 'confirmed' | 'waitlisted' | 'pending_approval' | 'rejected' | 'cancelled' | 'checked_in';
+export type TournamentPaymentStatus = 'unpaid' | 'paid' | 'waived';
+
+export interface TournamentPrize {
+  rank: string; // e.g. "1st Place", "2nd Place", "MVP"
+  reward: string; // e.g. "₹5,000 Cash + GioCasa Trophy"
+}
+
+export interface Tournament {
+  id: string; // 'tourn-xxx'
+  title: string;
+  slug: string; // unique URL slug
+  shortDescription: string;
+  description: string;
+  gameTitle: string; // 'EA Sports FC 25', 'Championship 8-Ball', etc.
+  gameCategory: ResourceCategory | 'other';
+  format: string; // '1v1 Knockout', '2v2 Doubles', 'Double Elimination', etc.
+  teamType: 'individual' | 'team';
+  teamSize: { min: number; max: number };
+  bannerImage: string;
+  venue: string; // e.g. 'GioCasa Upper Deck Gaming Lounge, Ayodhya'
+  startDate: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endDate?: string;
+  endTime?: string;
+  registrationOpeningDate: string; // YYYY-MM-DD
+  registrationOpeningTime: string; // HH:mm
+  registrationDeadlineDate: string; // YYYY-MM-DD
+  registrationDeadlineTime: string; // HH:mm
+  maxCapacity: number; // Max confirmed players / teams
+  waitlistEnabled: boolean;
+  waitlistCapacity: number;
+  entryFeePaise: number; // Stored in integer paise (e.g. 19900 = ₹199)
+  prizePoolDetails: string;
+  prizes?: TournamentPrize[];
+  eligibilityRequirements?: string;
+  rules: string[];
+  scheduleInstructions?: string;
+  requiredFields: string[]; // e.g. ['email', 'inGameId']
+  isFeatured: boolean;
+  status: TournamentStatus;
+  isRegistrationApprovalRequired: boolean;
+  confirmedCount: number;
+  waitlistCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TournamentRegistrationTeammate {
+  name: string;
+  phone?: string;
+  inGameId?: string;
+}
+
+export interface TournamentRegistration {
+  id: string; // 'reg-xxx'
+  registrationReference: string; // Human readable (e.g. 'GCA-FC25-4A9F')
+  accessToken: string; // High entropy token for viewing confirmation page
+  tournamentId: string;
+  tournamentSlug: string;
+  participantName: string;
+  phone: string;
+  email?: string;
+  inGameId?: string; // PSN ID, Gamertag, etc.
+  teamName?: string;
+  teammates?: TournamentRegistrationTeammate[];
+  status: TournamentRegistrationStatus;
+  paymentStatus: TournamentPaymentStatus;
+  paymentNotes?: string;
+  notes?: string;
+  rulesAccepted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TournamentResultStanding {
+  rank: number; // 1, 2, 3...
+  awardLabel: string; // 'Champion', 'Runner-up', '3rd Place', 'MVP'
+  participantName: string;
+  teamName?: string;
+  inGameId?: string;
+  scoreOrRecord?: string; // e.g. '4 - 2 in Grand Final'
+  photoUrl?: string;
+  notes?: string;
+}
+
+export interface TournamentResult {
+  id: string;
+  tournamentId: string;
+  tournamentSlug: string;
+  isPublished: boolean;
+  publishedAt?: string;
+  summary?: string;
+  standings: TournamentResultStanding[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HallOfFameEntry {
+  id: string;
+  tournamentId?: string;
+  tournamentTitle: string;
+  tournamentSlug?: string;
+  playerName: string;
+  teamName?: string;
+  award: string; // 'Champion', 'Runner-up', 'MVP', etc.
+  gameTitle: string;
+  gameCategory: ResourceCategory | 'other';
+  season: string; // 'Summer 2026', 'Inaugural Season'
+  eventDate: string; // YYYY-MM-DD
+  scoreDescription?: string;
+  photoUrl: string;
+  isFeatured: boolean;
+  isPublished: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}

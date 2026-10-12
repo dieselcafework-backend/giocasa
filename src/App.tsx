@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PageRoute } from './types';
+import { PageRoute, RouteParams } from './types';
 import { BookingModalProvider } from './context/BookingModalContext';
 import { OrderCartProvider } from './context/OrderCartContext';
 import { Navbar } from './components/layout/Navbar';
@@ -7,8 +7,9 @@ import { Footer } from './components/layout/Footer';
 import { MobileBottomBar } from './components/layout/MobileBottomBar';
 import { ReservationModal } from './components/modals/ReservationModal';
 import { QuickOrderDrawer } from './components/modals/QuickOrderDrawer';
+import { parseCurrentRoute, buildRoutePath, ParsedRoute } from './utils/router';
 
-// Pages
+// Core Pages
 import { HomePage } from './pages/HomePage';
 import { ExperiencePage } from './pages/ExperiencePage';
 import { MenuPage } from './pages/MenuPage';
@@ -19,34 +20,40 @@ import { ContactPage } from './pages/ContactPage';
 import { BookingPage } from './pages/BookingPage';
 import { AdminPage } from './pages/AdminPage';
 
+// GioCasa Arena Pages
+import { TournamentsPage } from './pages/TournamentsPage';
+import { TournamentDetailPage } from './pages/TournamentDetailPage';
+import { TournamentRegisterPage } from './pages/TournamentRegisterPage';
+import { TournamentConfirmationPage } from './pages/TournamentConfirmationPage';
+import { TournamentResultsPage } from './pages/TournamentResultsPage';
+import { HallOfFamePage } from './pages/HallOfFamePage';
+
 export const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<PageRoute>(() => {
-    const hash = window.location.hash.replace('#/', '').replace('#', '');
-    const validPages: PageRoute[] = ['home', 'experience', 'menu', 'gaming', 'events', 'about', 'contact', 'book', 'admin'];
-    return validPages.includes(hash as PageRoute) ? (hash as PageRoute) : 'home';
-  });
+  const [currentRoute, setCurrentRoute] = useState<ParsedRoute>(() => parseCurrentRoute());
 
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#/', '').replace('#', '');
-      const validPages: PageRoute[] = ['home', 'experience', 'menu', 'gaming', 'events', 'about', 'contact', 'book', 'admin'];
-      if (validPages.includes(hash as PageRoute)) {
-        setCurrentPage(hash as PageRoute);
-      }
+    const handleLocationChange = () => {
+      setCurrentRoute(parseCurrentRoute());
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
   }, []);
 
-  const navigateTo = (page: PageRoute) => {
-    setCurrentPage(page);
-    window.location.hash = `/${page === 'home' ? '' : page}`;
+  const navigateTo = (page: PageRoute, params?: RouteParams) => {
+    const nextParams = params || {};
+    setCurrentRoute({ page, params: nextParams });
+    const path = buildRoutePath(page, nextParams);
+    window.location.hash = `#${path}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const renderPage = () => {
-    switch (currentPage) {
+    switch (currentRoute.page) {
       case 'home':
         return <HomePage onNavigate={navigateTo} />;
       case 'experience':
@@ -64,7 +71,32 @@ export const App: React.FC = () => {
       case 'book':
         return <BookingPage onNavigate={navigateTo} />;
       case 'admin':
-        return <AdminPage onNavigate={navigateTo} />;
+        return (
+          <AdminPage
+            onNavigate={navigateTo}
+            adminTab={currentRoute.params.adminTab}
+            adminTournamentId={currentRoute.params.adminTournamentId}
+          />
+        );
+      case 'tournaments':
+        return <TournamentsPage onNavigate={navigateTo} />;
+      case 'tournament-detail':
+        return <TournamentDetailPage slug={currentRoute.params.slug || ''} onNavigate={navigateTo} />;
+      case 'tournament-register':
+        return <TournamentRegisterPage slug={currentRoute.params.slug || ''} onNavigate={navigateTo} />;
+      case 'tournament-confirmation':
+        return (
+          <TournamentConfirmationPage
+            slug={currentRoute.params.slug || ''}
+            registrationId={currentRoute.params.registrationId || ''}
+            token={currentRoute.params.token}
+            onNavigate={navigateTo}
+          />
+        );
+      case 'tournament-results':
+        return <TournamentResultsPage slug={currentRoute.params.slug || ''} onNavigate={navigateTo} />;
+      case 'hall-of-fame':
+        return <HallOfFamePage onNavigate={navigateTo} />;
       default:
         return <HomePage onNavigate={navigateTo} />;
     }
@@ -76,7 +108,7 @@ export const App: React.FC = () => {
         <div className="min-h-screen flex flex-col bg-brand-dark text-brand-cream relative selection:bg-brand-terracotta selection:text-white">
           
           {/* Main Navigation Header */}
-          <Navbar currentPage={currentPage} onNavigate={navigateTo} />
+          <Navbar currentPage={currentRoute.page} onNavigate={navigateTo} />
 
           {/* Active Page View */}
           <main className="flex-grow pb-16 sm:pb-0">

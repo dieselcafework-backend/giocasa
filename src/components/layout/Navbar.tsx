@@ -55,6 +55,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
     { id: 'experience', label: 'Experience' },
     { id: 'menu', label: 'Menu & Pizza' },
     { id: 'gaming', label: 'Gaming Lounge' },
+    { id: 'tournaments', label: 'Arena' },
     { id: 'book', label: 'Book Slot' },
     { id: 'events', label: 'Events' },
     { id: 'about', label: 'About' },

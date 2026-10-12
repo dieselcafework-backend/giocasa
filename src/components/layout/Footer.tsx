@@ -96,8 +96,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 { id: 'experience' as PageRoute, label: 'The 2-Level House' },
                 { id: 'menu' as PageRoute, label: 'Wood-Fired Menu' },
                 { id: 'gaming' as PageRoute, label: 'PS5 & Pool Arena' },
+                { id: 'tournaments' as PageRoute, label: 'GioCasa Arena' },
+                { id: 'hall-of-fame' as PageRoute, label: 'Hall of Fame' },
                 { id: 'book' as PageRoute, label: 'Book Station / Slot' },
-                { id: 'events' as PageRoute, label: 'Events & Tournaments' },
+                { id: 'events' as PageRoute, label: 'Events & Screenings' },
                 { id: 'about' as PageRoute, label: 'Our Story' },
                 { id: 'contact' as PageRoute, label: 'Find Us' },
               ].map(link => (

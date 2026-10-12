@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { PageRoute } from '../types';
+import { PageRoute, RouteParams } from '../types';
 import { bookingApi, AdminOverviewData, Booking, GamingResource } from '../services/bookingApi';
+import { AdminTournamentsManager } from '../components/admin/AdminTournamentsManager';
+import { AdminHallOfFameManager } from '../components/admin/AdminHallOfFameManager';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -21,18 +23,37 @@ import {
   ArrowRight,
   Lock,
   Key,
+  Trophy,
+  Award,
 } from 'lucide-react';
 
 interface AdminPageProps {
-  onNavigate: (page: PageRoute) => void;
+  onNavigate: (page: PageRoute, params?: RouteParams) => void;
+  adminTab?: string;
+  adminTournamentId?: string;
 }
 
-export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
+export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, adminTab, adminTournamentId }) => {
   // Passcode authentication
   const [passcode, setPasscode] = useState<string>(() => localStorage.getItem('giocasa_admin_passcode') || '');
   const [passcodeInput, setPasscodeInput] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Tab Navigation: 'stations' | 'tournaments' | 'hall-of-fame'
+  const [selectedTab, setSelectedTab] = useState<'stations' | 'tournaments' | 'hall-of-fame'>(() => {
+    if (adminTab === 'hall-of-fame') return 'hall-of-fame';
+    if (adminTab?.startsWith('tournament')) return 'tournaments';
+    return 'stations';
+  });
+
+  useEffect(() => {
+    if (adminTab === 'hall-of-fame') {
+      setSelectedTab('hall-of-fame');
+    } else if (adminTab?.startsWith('tournament')) {
+      setSelectedTab('tournaments');
+    }
+  }, [adminTab]);
 
   // Change Passcode Modal
   const [showPasscodeModal, setShowPasscodeModal] = useState<boolean>(false);
@@ -357,7 +378,57 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* 1. TODAY'S OVERVIEW METRICS (Requirement 22) */}
+        {/* Admin Navigation Tabs */}
+        <div className="flex border-b border-brand-border/60 gap-2 sm:gap-4 overflow-x-auto pb-1">
+          <button
+            onClick={() => {
+              setSelectedTab('stations');
+              onNavigate('admin', { adminTab: 'overview' });
+            }}
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 font-mono text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+              selectedTab === 'stations'
+                ? 'border-brand-gold text-brand-gold font-bold bg-brand-surface/40 rounded-t-xl'
+                : 'border-transparent text-brand-subtle hover:text-brand-cream hover:border-brand-border'
+            }`}
+          >
+            <Gamepad2 className="w-4 h-4" />
+            <span>Station Ops & Walk-ins</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setSelectedTab('tournaments');
+              onNavigate('admin', { adminTab: 'tournaments' });
+            }}
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 font-mono text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+              selectedTab === 'tournaments'
+                ? 'border-brand-gold text-brand-gold font-bold bg-brand-surface/40 rounded-t-xl'
+                : 'border-transparent text-brand-subtle hover:text-brand-cream hover:border-brand-border'
+            }`}
+          >
+            <Trophy className="w-4 h-4 text-brand-gold" />
+            <span>GioCasa Arena Tournaments</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setSelectedTab('hall-of-fame');
+              onNavigate('admin', { adminTab: 'hall-of-fame' });
+            }}
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 font-mono text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+              selectedTab === 'hall-of-fame'
+                ? 'border-brand-gold text-brand-gold font-bold bg-brand-surface/40 rounded-t-xl'
+                : 'border-transparent text-brand-subtle hover:text-brand-cream hover:border-brand-border'
+            }`}
+          >
+            <Award className="w-4 h-4 text-brand-gold" />
+            <span>Hall of Fame Archive</span>
+          </button>
+        </div>
+
+        {selectedTab === 'stations' && (
+          <>
+            {/* 1. TODAY'S OVERVIEW METRICS (Requirement 22) */}
         {overview && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-1 shadow-lg">
@@ -678,8 +749,27 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
             </div>
           </div>
         </div>
+      </>
+    )}
 
-        {/* 4. MANUAL BOOKING MODAL */}
+    {/* ARENA TOURNAMENTS MANAGER */}
+    {selectedTab === 'tournaments' && (
+      <AdminTournamentsManager
+        passcode={passcode}
+        initialTab={adminTab}
+        initialTournamentId={adminTournamentId}
+        onNavigatePublic={(slug) => onNavigate('tournament-detail', { slug })}
+      />
+    )}
+
+    {/* HALL OF FAME MANAGER */}
+    {selectedTab === 'hall-of-fame' && (
+      <AdminHallOfFameManager
+        passcode={passcode}
+      />
+    )}
+
+    {/* 4. MANUAL BOOKING MODAL */}
         {showManualModal && (
           <div className="fixed inset-0 z-50 bg-brand-dark/80 backdrop-blur-md flex items-center justify-center p-4">
             <div className="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-2xl relative">
