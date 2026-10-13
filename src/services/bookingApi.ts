@@ -262,4 +262,54 @@ export const bookingApi = {
     if (!json.success) throw new Error(json.error || 'Failed to update passcode');
     return json;
   },
+
+  // Delete a single booking by ID
+  async deleteAdminBooking(passcode: string, id: string): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${API_BASE}/admin/bookings/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-passcode': passcode,
+      },
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Failed to delete booking');
+    return json;
+  },
+
+  // Delete selected bookings in batch
+  async deleteAdminBookingsBatch(
+    passcode: string,
+    ids: string[]
+  ): Promise<{ success: boolean; count: number; message: string }> {
+    const res = await fetch(`${API_BASE}/admin/bookings/delete-batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-passcode': passcode,
+      },
+      body: JSON.stringify({ ids }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Failed to delete selected bookings');
+    return json;
+  },
+
+  // Clear booking history (completed & cancelled or all)
+  async clearBookingHistory(
+    passcode: string,
+    scope: 'completed_and_cancelled' | 'all' = 'completed_and_cancelled'
+  ): Promise<{ success: boolean; count: number; message: string }> {
+    const res = await fetch(`${API_BASE}/admin/bookings/clear-history`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-passcode': passcode,
+      },
+      body: JSON.stringify({ scope }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Failed to clear booking history');
+    return json;
+  },
 };

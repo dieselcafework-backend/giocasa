@@ -256,6 +256,60 @@ router.patch('/bookings/:id', async (req: Request, res: Response) => {
   }
 });
 
+// DELETE /api/admin/bookings/:id - Delete a single booking
+router.delete('/bookings/:id', async (req: Request, res: Response) => {
+  try {
+    const success = await dbService.deleteBooking(req.params.id);
+    if (!success) {
+      return res.status(404).json({ success: false, error: 'Booking not found or already deleted.' });
+    }
+    return res.json({ success: true, message: `Booking #${req.params.id} deleted successfully.` });
+  } catch (err: any) {
+    console.error('Error deleting booking:', err);
+    return res.status(500).json({ success: false, error: 'Failed to delete booking.' });
+  }
+});
+
+// POST /api/admin/bookings/delete-batch - Delete selected bookings in batch
+router.post('/bookings/delete-batch', async (req: Request, res: Response) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: 'An array of booking IDs is required.' });
+    }
+
+    const count = await dbService.deleteBookings(ids);
+    return res.json({
+      success: true,
+      count,
+      message: `Successfully deleted ${count} selected booking${count === 1 ? '' : 's'}.`,
+    });
+  } catch (err: any) {
+    console.error('Error in batch booking deletion:', err);
+    return res.status(500).json({ success: false, error: 'Failed to delete selected bookings.' });
+  }
+});
+
+// POST /api/admin/bookings/clear-history - Clear booking history (completed & cancelled or all)
+router.post('/bookings/clear-history', async (req: Request, res: Response) => {
+  try {
+    const { scope } = req.body;
+    const cleanScope = scope === 'all' ? 'all' : 'completed_and_cancelled';
+
+    const count = await dbService.clearBookingHistory(cleanScope);
+    const scopeLabel = cleanScope === 'all' ? 'all bookings' : 'completed and cancelled sessions';
+
+    return res.json({
+      success: true,
+      count,
+      message: `History cleared: removed ${count} ${scopeLabel}.`,
+    });
+  } catch (err: any) {
+    console.error('Error clearing booking history:', err);
+    return res.status(500).json({ success: false, error: 'Failed to clear booking history.' });
+  }
+});
+
 // PATCH /api/admin/resources/:id - Toggle maintenance or active status
 router.patch('/resources/:id', async (req: Request, res: Response) => {
   try {

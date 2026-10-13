@@ -638,6 +638,64 @@ class DatabaseService {
     return { success: true, booking: updated || undefined };
   }
 
+  async deleteBooking(id: string): Promise<boolean> {
+    const cleanId = id.trim().toUpperCase();
+    if (this.isMongoConnected && this.db) {
+      const res = await this.db.collection<Booking>('bookings').deleteOne({ id: cleanId });
+      return (res.deletedCount || 0) > 0;
+    } else {
+      const initialLen = this.fileBookings.length;
+      this.fileBookings = this.fileBookings.filter((b) => b.id !== cleanId);
+      if (this.fileBookings.length !== initialLen) {
+        this.saveBookingsToFile();
+        return true;
+      }
+      return false;
+    }
+  }
+
+  async deleteBookings(ids: string[]): Promise<number> {
+    if (!ids || ids.length === 0) return 0;
+    const cleanIds = ids.map((i) => i.trim().toUpperCase());
+
+    if (this.isMongoConnected && this.db) {
+      const res = await this.db.collection<Booking>('bookings').deleteMany({ id: { $in: cleanIds } });
+      return res.deletedCount || 0;
+    } else {
+      const initialLen = this.fileBookings.length;
+      const idSet = new Set(cleanIds);
+      this.fileBookings = this.fileBookings.filter((b) => !idSet.has(b.id));
+      const deletedCount = initialLen - this.fileBookings.length;
+      if (deletedCount > 0) {
+        this.saveBookingsToFile();
+      }
+      return deletedCount;
+    }
+  }
+
+  async clearBookingHistory(scope: 'completed_and_cancelled' | 'all' = 'completed_and_cancelled'): Promise<number> {
+    const filterQuery: any = scope === 'all'
+      ? {}
+      : { status: { $in: ['completed', 'cancelled'] } };
+
+    if (this.isMongoConnected && this.db) {
+      const res = await this.db.collection<Booking>('bookings').deleteMany(filterQuery);
+      return res.deletedCount || 0;
+    } else {
+      const initialLen = this.fileBookings.length;
+      if (scope === 'all') {
+        this.fileBookings = [];
+      } else {
+        this.fileBookings = this.fileBookings.filter((b) => b.status !== 'completed' && b.status !== 'cancelled');
+      }
+      const deletedCount = initialLen - this.fileBookings.length;
+      if (deletedCount > 0) {
+        this.saveBookingsToFile();
+      }
+      return deletedCount;
+    }
+  }
+
   /**
    * Requirement 5: Automatic Booking Expiration & Status Refresh
    * Based on current time in Asia/Kolkata:

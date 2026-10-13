@@ -25,6 +25,10 @@ import {
   Key,
   Trophy,
   Award,
+  Trash2,
+  Trash,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 
 interface AdminPageProps {
@@ -266,6 +270,112 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, adminTab, admi
     const period = h >= 12 ? 'PM' : 'AM';
     const displayH = h % 12 === 0 ? 12 : h % 12;
     return `${displayH}:${String(m || 0).padStart(2, '0')} ${period}`;
+  };
+
+  // Selection & History Delete State
+  const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
+  const [showClearHistoryModal, setShowClearHistoryModal] = useState<boolean>(false);
+  const [clearHistoryScope, setClearHistoryScope] = useState<'completed_and_cancelled' | 'all'>('completed_and_cancelled');
+  const [actionLoading, setActionLoading] = useState<boolean>(false);
+  const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // History & Selection calculations
+  const historyCount = bookings.filter((b) => b.status === 'completed' || b.status === 'cancelled').length;
+  const allFilteredSelected =
+    filteredBookings.length > 0 && filteredBookings.every((b) => selectedBookingIds.has(b.id));
+
+  const handleToggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedBookingIds(new Set());
+    } else {
+      const next = new Set(selectedBookingIds);
+      filteredBookings.forEach((b) => next.add(b.id));
+      setSelectedBookingIds(next);
+    }
+  };
+
+  const handleToggleSelectBooking = (id: string) => {
+    const next = new Set(selectedBookingIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedBookingIds(next);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedBookingIds(new Set());
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedBookingIds.size === 0) return;
+    const count = selectedBookingIds.size;
+    const confirmMsg = `Are you sure you want to delete ${count} selected booking${
+      count === 1 ? '' : 's'
+    } from history? This action cannot be undone.`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setActionLoading(true);
+    setActionFeedback(null);
+    try {
+      const res = await bookingApi.deleteAdminBookingsBatch(passcode, Array.from(selectedBookingIds));
+      setSelectedBookingIds(new Set());
+      await loadDashboard(passcode);
+      setActionFeedback({
+        type: 'success',
+        message: res.message || `Deleted ${count} bookings successfully.`,
+      });
+      setTimeout(() => setActionFeedback(null), 4000);
+    } catch (err: any) {
+      setActionFeedback({ type: 'error', message: err.message || 'Failed to delete selected bookings.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteSingle = async (booking: Booking) => {
+    const confirmMsg = `Delete booking #${booking.id} (${booking.customerName}) from history?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setActionLoading(true);
+    setActionFeedback(null);
+    try {
+      await bookingApi.deleteAdminBooking(passcode, booking.id);
+      if (selectedBookingIds.has(booking.id)) {
+        const next = new Set(selectedBookingIds);
+        next.delete(booking.id);
+        setSelectedBookingIds(next);
+      }
+      await loadDashboard(passcode);
+      setActionFeedback({ type: 'success', message: `Booking #${booking.id} deleted successfully.` });
+      setTimeout(() => setActionFeedback(null), 4000);
+    } catch (err: any) {
+      setActionFeedback({ type: 'error', message: err.message || 'Failed to delete booking.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleClearHistorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActionLoading(true);
+    setActionFeedback(null);
+    try {
+      const res = await bookingApi.clearBookingHistory(passcode, clearHistoryScope);
+      setShowClearHistoryModal(false);
+      setSelectedBookingIds(new Set());
+      await loadDashboard(passcode);
+      setActionFeedback({
+        type: 'success',
+        message: res.message || 'Booking history cleared successfully.',
+      });
+      setTimeout(() => setActionFeedback(null), 5000);
+    } catch (err: any) {
+      setActionFeedback({ type: 'error', message: err.message || 'Failed to clear booking history.' });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   // IF NOT AUTHENTICATED -> SHOW PASSCODE SCREEN
@@ -628,8 +738,79 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, adminTab, admi
                   </option>
                 ))}
               </select>
+
+              {/* Clear History Button */}
+              <button
+                onClick={() => setShowClearHistoryModal(true)}
+                disabled={actionLoading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-900/60 bg-red-950/40 hover:bg-red-900/60 text-red-300 hover:text-red-100 text-xs font-mono transition-colors shadow-sm disabled:opacity-50"
+                title="Clear completed and cancelled booking history"
+              >
+                <Trash className="w-3.5 h-3.5 text-red-400" />
+                <span>Clear History</span>
+                {historyCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full bg-red-900/80 text-[10px] text-red-200">
+                    {historyCount}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
+
+          {/* Action Feedback Notification */}
+          {actionFeedback && (
+            <div
+              className={`p-3 rounded-xl text-xs font-mono flex items-center justify-between border ${
+                actionFeedback.type === 'success'
+                  ? 'bg-emerald-950/70 border-emerald-700/60 text-emerald-200'
+                  : 'bg-red-950/70 border-red-700/60 text-red-200'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {actionFeedback.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                )}
+                <span>{actionFeedback.message}</span>
+              </div>
+              <button
+                onClick={() => setActionFeedback(null)}
+                className="text-stone-400 hover:text-stone-200 text-sm ml-2 px-1"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Selection Actions Toolbar */}
+          {selectedBookingIds.size > 0 && (
+            <div className="bg-brand-surfaceElevated border border-brand-gold/40 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+              <div className="flex items-center gap-2 text-xs font-mono text-brand-cream">
+                <CheckSquare className="w-4 h-4 text-brand-gold" />
+                <span>
+                  <strong className="text-brand-gold">{selectedBookingIds.size}</strong> booking{selectedBookingIds.size === 1 ? '' : 's'} selected
+                </span>
+                <button
+                  onClick={handleClearSelection}
+                  className="ml-2 text-[11px] text-brand-subtle hover:text-brand-cream underline decoration-dotted"
+                >
+                  Deselect All
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDeleteSelected}
+                  disabled={actionLoading}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-xs font-mono font-semibold transition-colors disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                  <span>{actionLoading ? 'Deleting...' : `Delete Selected (${selectedBookingIds.size})`}</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Bookings Table */}
           <div className="bg-brand-surface border border-brand-border rounded-2xl overflow-hidden shadow-xl">
@@ -637,6 +818,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, adminTab, admi
               <table className="w-full text-left text-xs">
                 <thead className="bg-brand-surfaceElevated border-b border-brand-border font-mono text-brand-subtle uppercase text-[10px]">
                   <tr>
+                    <th className="p-3.5 w-10 text-center">
+                      <button
+                        type="button"
+                        onClick={handleToggleSelectAll}
+                        className="text-brand-subtle hover:text-brand-gold transition-colors focus:outline-none"
+                        title={allFilteredSelected ? 'Deselect all' : 'Select all'}
+                      >
+                        {allFilteredSelected ? (
+                          <CheckSquare className="w-4 h-4 text-brand-gold" />
+                        ) : (
+                          <Square className="w-4 h-4 text-brand-subtle/70" />
+                        )}
+                      </button>
+                    </th>
                     <th className="p-3.5">ID / Customer</th>
                     <th className="p-3.5">Equipment</th>
                     <th className="p-3.5">Date & Time</th>
@@ -649,13 +844,33 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, adminTab, admi
                 <tbody className="divide-y divide-brand-border/40 font-mono">
                   {filteredBookings.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-brand-subtle font-sans">
+                      <td colSpan={8} className="p-8 text-center text-brand-subtle font-sans">
                         No bookings match your current filter.
                       </td>
                     </tr>
                   ) : (
                     filteredBookings.map((b) => (
-                      <tr key={b.id} className="hover:bg-brand-surfaceElevated/50 transition-colors">
+                      <tr
+                        key={b.id}
+                        className={`transition-colors ${
+                          selectedBookingIds.has(b.id)
+                            ? 'bg-brand-terracotta/10 border-l-2 border-brand-terracotta'
+                            : 'hover:bg-brand-surfaceElevated/50'
+                        }`}
+                      >
+                        <td className="p-3.5 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSelectBooking(b.id)}
+                            className="text-brand-subtle hover:text-brand-gold transition-colors focus:outline-none"
+                          >
+                            {selectedBookingIds.has(b.id) ? (
+                              <CheckSquare className="w-4 h-4 text-brand-gold" />
+                            ) : (
+                              <Square className="w-4 h-4 text-brand-subtle/50" />
+                            )}
+                          </button>
+                        </td>
                         <td className="p-3.5">
                           <span className="font-bold text-brand-gold">{b.id}</span>
                           <span className="font-sans font-semibold text-brand-cream block">{b.customerName}</span>
@@ -740,6 +955,15 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, adminTab, admi
                               </button>
                             </>
                           )}
+
+                          {/* Delete Single Booking Button */}
+                          <button
+                            onClick={() => handleDeleteSingle(b)}
+                            title={`Delete booking #${b.id} from history`}
+                            className="p-1 rounded bg-stone-900/60 border border-stone-800 text-stone-400 hover:text-red-400 hover:border-red-900/60 hover:bg-red-950/40 transition-colors inline-flex items-center align-middle"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -982,6 +1206,104 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, adminTab, admi
                     className="px-6 py-2.5 rounded-xl bg-brand-terracotta hover:bg-brand-terracottaHover text-brand-cream text-xs font-bold uppercase tracking-wider transition-all shadow-luxury-ember"
                   >
                     {passcodeSubmitting ? 'Updating...' : 'Save Passcode'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* CLEAR HISTORY MODAL */}
+        {showClearHistoryModal && (
+          <div className="fixed inset-0 z-50 bg-brand-dark/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl relative">
+              <div className="flex items-center justify-between pb-3 border-b border-brand-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-950/80 border border-red-700/60 text-red-400 flex items-center justify-center">
+                    <Trash className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-brand-cream">
+                      Clear Booking History
+                    </h3>
+                    <p className="text-xs text-brand-subtle">
+                      Permanent administrative cleanup
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowClearHistoryModal(false)}
+                  className="text-brand-subtle hover:text-brand-cream p-1 rounded-lg"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleClearHistorySubmit} className="space-y-4">
+                <div className="p-3.5 rounded-xl bg-brand-surfaceElevated border border-brand-border text-xs text-brand-cream space-y-2.5">
+                  <p className="font-semibold font-mono uppercase text-[11px] tracking-wider text-brand-subtle">
+                    Select scope to purge:
+                  </p>
+
+                  <label className="flex items-start gap-2.5 p-2.5 rounded-xl cursor-pointer hover:bg-brand-surface border border-transparent hover:border-brand-border/60 transition-colors">
+                    <input
+                      type="radio"
+                      name="clearScope"
+                      checked={clearHistoryScope === 'completed_and_cancelled'}
+                      onChange={() => setClearHistoryScope('completed_and_cancelled')}
+                      className="mt-0.5 text-brand-terracotta focus:ring-brand-terracotta"
+                    />
+                    <div>
+                      <span className="block font-medium text-brand-cream text-xs">
+                        Completed & Cancelled only (Recommended)
+                      </span>
+                      <span className="block text-[11px] text-brand-subtle mt-0.5">
+                        Safely cleans up old finished sessions ({historyCount} records). Keeps active playing stations and upcoming reservations untouched.
+                      </span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 p-2.5 rounded-xl cursor-pointer hover:bg-brand-surface border border-transparent hover:border-brand-border/60 transition-colors">
+                    <input
+                      type="radio"
+                      name="clearScope"
+                      checked={clearHistoryScope === 'all'}
+                      onChange={() => setClearHistoryScope('all')}
+                      className="mt-0.5 text-brand-terracotta focus:ring-brand-terracotta"
+                    />
+                    <div>
+                      <span className="block font-medium text-red-300 text-xs">
+                        All Bookings (Danger)
+                      </span>
+                      <span className="block text-[11px] text-brand-subtle mt-0.5">
+                        Purges ALL bookings, including active and upcoming reservations ({bookings.length} records total).
+                      </span>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="p-3 rounded-xl bg-red-950/40 border border-red-900/60 text-[11px] text-red-300 flex items-start gap-2 font-mono">
+                  <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span>
+                    Warning: This action permanently deletes records from the database and cannot be undone.
+                  </span>
+                </div>
+
+                <div className="pt-2 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowClearHistoryModal(false)}
+                    className="px-4 py-2.5 rounded-xl border border-brand-border text-brand-subtle hover:text-brand-cream text-xs font-mono"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="px-5 py-2.5 rounded-xl bg-red-900 hover:bg-red-800 text-red-100 text-xs font-bold uppercase tracking-wider transition-all border border-red-700 disabled:opacity-50"
+                  >
+                    {actionLoading ? 'Clearing...' : 'Confirm & Clear History'}
                   </button>
                 </div>
               </form>
